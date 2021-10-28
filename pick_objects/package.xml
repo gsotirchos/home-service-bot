@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>pick_objects</name>
+  <version>1.0.0</version>
+  <description>
+    Package for sending navigation goals for picking objects.
+  </description>
+
+  <author email="gsotirch@gmail.com">George Sotirchos</author>
+  <maintainer email="gsotirch@gmail.com">George Sotirchos</maintainer>
+  <license>MIT</license>
+  <url type="website">https://github.com/7555G/home-service-bot</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>actionlib</build_depend>
+  <build_depend>move_base_msgs</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_export_depend>actionlib</build_export_depend>
+  <build_export_depend>move_base_msgs</build_export_depend>
+  <build_export_depend>tf2_geometry_msgs</build_export_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <exec_depend>actionlib</exec_depend>
+  <exec_depend>move_base_msgs</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+</package>
