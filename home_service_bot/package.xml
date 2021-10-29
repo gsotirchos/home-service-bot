@@ -3,7 +3,7 @@
   <name>home_service_bot</name>
   <version>1.0.0</version>
   <description>
-    Metapackage containing packages for a 4-wheeled skid-steer drive home-service bot that picks an objcet from a position and places it at another, specified by markers.
+    Metapackage containing packages for a 4-wheeled skid-steer drive home-service bot that picks an object from a location and places it at another, specified by markers.
   </description>
 
   <author email="gsotirch@gmail.com">George Sotirchos</author>
