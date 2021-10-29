@@ -13,7 +13,25 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   move_base_msgs
   tf2_geometry_msgs
+  std_msgs
+  geometry_msgs
+  message_generation
   roscpp
+)
+
+################################################
+## Declare ROS messages, services and actions ##
+################################################
+
+add_service_files(
+  FILES
+  MoveToPose.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
 )
 
 ###################################

@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   tf2_geometry_msgs
   roscpp
+  pick_objects
 )
 
 ###################################
@@ -28,7 +29,7 @@ catkin_package()
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+#  include
   ${catkin_INCLUDE_DIRS}
 )
 

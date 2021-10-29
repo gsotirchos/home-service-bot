@@ -1,17 +1,75 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <std_msgs/Int8.h>
+#include <geometry_msgs/Pose.h>
+
+#include <map>
+#include <vector>
+
+#include "pick_objects/MoveToPose.h"
 
 class AddMarkers {
   public:
     AddMarkers(std::string the_frame_id = "/map")
       : frame_id_{the_frame_id}
     {
-        // Create a publisher for visualization_msgs::Marker type messages with queue size of 1
+        // Publisher for visualization_msgs::Marker type messages with queue size of 1
         marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
+
+        // Subscriber on the /move_state topic receoving updates on the robot's moving state and storing it in the last_move_state varable via the StoreMoveState callback function
+        move_state_sub_ = n_.subscribe("/move_state", 10, &AddMarkers::StoreMoveState, this);
     }
 
-    void Add(float x, float y, float rot, int id) const {
+    // The robot's last received moving state
+    static int last_move_state;
+
+    // Callback to store the received robot's moving state
+    void StoreMoveState(std_msgs::Int8 const & msg) {
+        last_move_state = msg.data;
+    }
+
+    // Method to move the robot to a marker (specified by ID)
+    void MoveRobot(int id) const {
+        // Request move to marker's pose
+        pick_objects::MoveToPose srv;
+        srv.request.pose = markers_[id];
+
+        // Call the move_robot service and pass the requested pose
+        if (!move_robot_client_.call(srv)) {
+            ROS_ERROR("Failed to call service move_robot");
+        }
+    }
+
+    // Method to create a new marker entry, store its pose and return its ID
+    int New(float x, float y, float rot) {
+        // Create a geometry_msgs/Pose object to properly store the pose
+        geometry_msgs::Pose pose;
+
+        // Create a tf quaternion object to convert the yaw rotation input
+        tf2::Quaternion q_rot;
+        q_rot.setRPY(0, 0, rot);
+
+        // Set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
+        pose.position.x = x;
+        pose.position.y = y;
+        pose.position.z = 0;
+        tf2::convert(q_rot, pose.orientation);
+
+        // Get an ID
+        //int id = 0;
+        //if (!markers_.empty()) {
+            int id = markers_.size();
+        //}
+
+        std::pair<int, geometry_msgs::Pose> new_marker(id, pose);
+        markers_.insert(new_marker);
+
+        return id;
+    }
+
+    // Method to show a marker specified by its ID
+    int Show(int id) const {
         // Create a marker object
         visualization_msgs::Marker marker;
 
@@ -24,42 +82,42 @@ class AddMarkers {
         marker.ns = "goal_markers";
         marker.id = id;
 
-        // Set the shape type to be a cube
-        marker.type = visualization_msgs::Marker::CUBE;
+        // Set the shape type
+        marker.type = visualization_msgs::Marker::SPHERE;
 
         // Set the marker action. Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
         marker.action = visualization_msgs::Marker::ADD;
 
-        // Create a tf quaternion object to convert the yaw rotation input
-        tf2::Quaternion q_rot;
-        q_rot.setRPY(0, 0, rot);
-
         // Set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
-        marker.pose.position.x = x;
-        marker.pose.position.y = y;
-        tf2::convert(q_rot, marker.pose.orientation);
+        marker.pose = markers_[id];
 
-        // Set the scale of the marker -- 1x1x1 here means 1m on a side
+        // Set the scale of the marker
         marker.scale.x = 0.2;
         marker.scale.y = 0.2;
         marker.scale.z = 0.2;
 
-        // Set the color -- be sure to set alpha to something non-zero!
+        // Set the color
         marker.color.r = 1.0f;
         marker.color.g = 0.0f;
         marker.color.b = 0.0f;
-        marker.color.a = 1.0;
+        marker.color.a = 0.8;
 
-        // Set the lifetime
+        // Set infinite lifetime
         marker.lifetime = ros::Duration();
 
         std::ostringstream publish_text;
-        publish_text << "Adding marker: " << id << "(" << x << ", " << y << ", " << rot <<  ")";
+        publish_text << "Adding marker: ["
+            << marker.id << "] ("
+            << marker.pose.position.x << ", "
+            << marker.pose.position.y <<  ")";
 
         publish_marker_(marker, publish_text);
+
+        return marker.id;
     }
 
-    void Delete(int id) const {
+    // Method to delete maker specified by its ID
+    void Hide(int id) const {
         // Create a marker object
         visualization_msgs::Marker marker;
 
@@ -76,12 +134,13 @@ class AddMarkers {
         marker.action = visualization_msgs::Marker::DELETE;
 
         std::ostringstream publish_text;
-        publish_text << "Deleting marker: " << id;
+        publish_text << "Deleting marker: [" << id << "]";
 
         publish_marker_(marker, publish_text);
     }
 
-    void DeleteAll() const {
+    // Method to delete all shown markers
+    void HideAll() const {
         // Create a marker object
         visualization_msgs::Marker marker;
 
@@ -105,16 +164,21 @@ class AddMarkers {
   private:
     ros::NodeHandle n_;
     ros::Publisher marker_pub_;
+    ros::Subscriber move_state_sub_;
+    ros::ServiceClient move_robot_client_;
+
+    // Map to store the markers' IDs and poses
+    std::map<int, geometry_msgs::Pose> markers_;
 
     // The fixed frame (can be specified via constructor argument, defaults to "/map")
     std::string const frame_id_;
 
-    // This method performs the publishinf of a created marker
+    // Method to perform the publishing of a created marker
     void publish_marker_(
         visualization_msgs::Marker & marker,
         std::ostringstream & text_oss
     ) const {
-        // Publish the marker
+        // Check if anyone's listening, at 1 sec intervals
         while (marker_pub_.getNumSubscribers() < 1) {
             if (!ros::ok()) {
                 return;
@@ -124,6 +188,7 @@ class AddMarkers {
             ros::Duration(1.0).sleep();
         }
 
+        // Publish the marker
         ROS_INFO_STREAM(text_oss.str());
         marker_pub_.publish(marker);
     }
@@ -132,17 +197,18 @@ class AddMarkers {
 int main(int argc, char * * argv) {
     ros::init(argc, argv, "add_markers");
 
-    AddMarkers addMarkers;
+    // Create an AddMarkers object
+    AddMarkers AMObject;
 
-    addMarkers.Add(1.0, 0.0, -1.0, 10);
+    // The pickup marker
+    int pickup_marker = AMObject.New(1.0, 0.0, -1.0);
+    AMObject.Show(pickup_marker);
+    AMObject.MoveRobot(pickup_marker);
+    AMObject.Hide(pickup_marker);
     sleep(5);
 
-
-    addMarkers.Delete(10);
-    sleep(5);
-
-    addMarkers.Add(1.0, 1.0, -2.0, 20);
-    sleep(5);
-
-    addMarkers.DeleteAll();
+    // The dropoff marker
+    int dropoff_marker = AMObject.New(1.0, 0.0, -1.0);
+    AMObject.MoveRobot(dropoff_marker);
+    AMObject.Show(dropoff_marker);
 }
