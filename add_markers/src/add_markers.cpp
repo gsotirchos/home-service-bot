@@ -102,7 +102,6 @@ class AddMarkers {
         publish_marker_(marker, publish_text);
     }
 
-
   private:
     ros::NodeHandle n_;
     ros::Publisher marker_pub_;
