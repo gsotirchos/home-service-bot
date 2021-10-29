@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>home_service_bot</name>
+  <version>1.0.0</version>
+  <description>
+    Metapackage containing packages for a 4-wheeled skid-steer drive home-service bot that picks an objcet from a position and places it at another, specified by markers.
+  </description>
+
+  <author email="gsotirch@gmail.com">George Sotirchos</author>
+  <maintainer email="gsotirch@gmail.com">George Sotirchos</maintainer>
+  <license>MIT</license>
+  <url type="website">https://github.com/7555G/home-service-bot</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <!--<depend>my_robot</depend>-->
+  <depend>turtlebot</depend>
+  <depend>turtlebot_interactions</depend>
+  <depend>turtlebot_simulator</depend>
+  <depend>slam_gmapping</depend>
+  <depend>pick_objects</depend>
+  <depend>add_markers</depend>
+</package>
