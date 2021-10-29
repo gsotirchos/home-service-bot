@@ -13,10 +13,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <!--<depend>my_robot</depend>-->
-  <depend>turtlebot</depend>
-  <depend>turtlebot_interactions</depend>
-  <depend>turtlebot_simulator</depend>
-  <depend>slam_gmapping</depend>
+  <depend>turtlebot_gazebo</depend>
   <depend>pick_objects</depend>
   <depend>add_markers</depend>
 </package>

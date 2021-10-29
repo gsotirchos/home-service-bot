@@ -32,6 +32,14 @@ while [[ -z "$(rosnode list 2> /dev/null | grep "/amcl")" ]]; do
 done
 echo "DONE"
 
+# start pick_objects node and wait for it
+xterm  -e  "rosrun pick_objects pick_objects" &
+echo -n "Starting the pick_objects node... "
+while [[ -z "$(rosnode list 2> /dev/null | grep "/pick_objects")" ]]; do
+    sleep 0.5
+done
+echo "DONE"
+
 # start add_markers node and wait for it
 xterm  -e  "rosrun add_markers add_markers" &
 echo -n "Starting the add_markers node... "
