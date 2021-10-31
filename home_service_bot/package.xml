@@ -12,8 +12,8 @@
   <url type="website">https://github.com/7555G/home-service-bot</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <!--<depend>my_robot</depend>-->
-  <depend>turtlebot_gazebo</depend>
+  <!--<depend>turtlebot_gazebo</depend>-->
+  <depend>mapping_bot</depend>
   <depend>pick_objects</depend>
   <depend>add_markers</depend>
 </package>
