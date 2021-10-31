@@ -17,9 +17,9 @@ class PickObjects {
         frame_id_{the_frame_id}
     {
         // Publisher of a std_msgs::Int8 message specifying the robot's moving state
-        // Finishied: 0
-        // Failed:    1
-        // Moving:    2
+        // Failed:   0
+        // Finished: 1
+        // Moving:   2
         move_state_pub_ = n_.advertise<std_msgs::Int8>("/move_state", 10);
 
         // Server for the /pick_objects/move_robot service using the HandleMoveRequest callback function
@@ -68,12 +68,12 @@ class PickObjects {
         if(move_base_client_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
             res.msg_feedback = "The base moved to goal: " + goal_oss.str();
 
-            // Set current state as "finished" (0)
+            // Set current state as "finished" (1)
             move_state.data = 1;
         } else {
             res.msg_feedback = "The base failed to move to goal: " + goal_oss.str();
 
-            // Set current state as "failed" (1)
+            // Set current state as "failed" (0)
             move_state.data = 0;
         }
 

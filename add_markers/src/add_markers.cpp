@@ -45,10 +45,7 @@ class AddMarkers {
         // Request move to marker's pose
         pick_objects::MoveToPose srv;
         srv.request.pose = poses_[id];
-        srv.request.pose.position.z = 0;  // in case the marker was higher, just for demonstration
-        srv.request.pose.position.z = 0;  // in case the marker was higher, just for demonstration
-        srv.request.pose.position.z = 0;  // in case the marker was higher, just for demonstration
-        srv.request.pose.position.z = 0;  // in case the marker was higher, just for demonstration
+        srv.request.pose.position.z = 0;  // in case the marker was higher (just for demonstration)
 
         // Call the move_robot service and pass the requested pose
         if (!move_robot_client_.call(srv)) {
@@ -103,8 +100,6 @@ class AddMarkers {
 
         // Set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
         marker.pose = poses_[id];
-        ROS_INFO_STREAM("SHOWING MARKER:");
-        ROS_INFO_STREAM(marker.pose);
 
         // Set the scale of the marker
         marker.scale.x = 0.2;
@@ -222,12 +217,16 @@ int main(int argc, char * * argv) {
     if (AMObject.MoveRobot(pickup_marker)) {
         AMObject.Hide(pickup_marker);
         sleep(5);
+    } else {
+        return 1;
     }
 
     // Perform the dropoff
     int dropoff_marker = AMObject.New(3.0, 2.0, -1.0);
     if (AMObject.MoveRobot(dropoff_marker)) {;
         AMObject.Show(dropoff_marker);
+    } else {
+        return 1;
     }
 
     return 0;
