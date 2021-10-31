@@ -12,32 +12,50 @@
 class AddMarkers {
   public:
     AddMarkers(std::string the_frame_id = "/map")
-      : frame_id_{the_frame_id}
+      : frame_id_{the_frame_id},
+        last_move_state{0}
     {
         // Publisher for visualization_msgs::Marker type messages with queue size of 1
         marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 
         // Subscriber on the /move_state topic receoving updates on the robot's moving state and storing it in the last_move_state varable via the StoreMoveState callback function
-        move_state_sub_ = n_.subscribe("/move_state", 10, &AddMarkers::StoreMoveState, this);
+        move_state_sub_ = n_.subscribe(
+            "/move_state",
+            10,
+            &AddMarkers::StoreMoveState,
+            this
+        );
+
+        // Client capable of requesting services from /pick_objects/move_robot
+        move_robot_client_ = n_.serviceClient<pick_objects::MoveToPose>(
+            "/pick_objects/move_robot"
+        );
     }
 
     // The robot's last received moving state
-    static int last_move_state;
+    int last_move_state;
 
     // Callback to store the received robot's moving state
     void StoreMoveState(std_msgs::Int8 const & msg) {
         last_move_state = msg.data;
     }
 
-    // Method to move the robot to a marker (specified by ID)
-    void MoveRobot(int id) const {
+    // Method to move the robot to a marker (specified by its ID)
+    bool MoveRobot(int id) {
         // Request move to marker's pose
         pick_objects::MoveToPose srv;
-        srv.request.pose = markers_[id];
+        srv.request.pose = poses_[id];
+        srv.request.pose.position.z = 0;  // in case the marker was higher, just for demonstration
+        srv.request.pose.position.z = 0;  // in case the marker was higher, just for demonstration
+        srv.request.pose.position.z = 0;  // in case the marker was higher, just for demonstration
+        srv.request.pose.position.z = 0;  // in case the marker was higher, just for demonstration
 
         // Call the move_robot service and pass the requested pose
         if (!move_robot_client_.call(srv)) {
-            ROS_ERROR("Failed to call service move_robot");
+        ROS_ERROR("Failed to call service move_robot");
+            return 0;
+        } else {
+            return 1;
         }
     }
 
@@ -49,21 +67,16 @@ class AddMarkers {
         // Create a tf quaternion object to convert the yaw rotation input
         tf2::Quaternion q_rot;
         q_rot.setRPY(0, 0, rot);
+        q_rot.normalize();
 
         // Set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
         pose.position.x = x;
         pose.position.y = y;
-        pose.position.z = 0;
+        pose.position.z = 0.5;
         tf2::convert(q_rot, pose.orientation);
 
-        // Get an ID
-        //int id = 0;
-        //if (!markers_.empty()) {
-            int id = markers_.size();
-        //}
-
-        std::pair<int, geometry_msgs::Pose> new_marker(id, pose);
-        markers_.insert(new_marker);
+        int id = poses_.size();
+        poses_.push_back(pose);
 
         return id;
     }
@@ -89,7 +102,9 @@ class AddMarkers {
         marker.action = visualization_msgs::Marker::ADD;
 
         // Set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
-        marker.pose = markers_[id];
+        marker.pose = poses_[id];
+        ROS_INFO_STREAM("SHOWING MARKER:");
+        ROS_INFO_STREAM(marker.pose);
 
         // Set the scale of the marker
         marker.scale.x = 0.2;
@@ -106,7 +121,7 @@ class AddMarkers {
         marker.lifetime = ros::Duration();
 
         std::ostringstream publish_text;
-        publish_text << "Adding marker: ["
+        publish_text << "Showing marker: ["
             << marker.id << "] ("
             << marker.pose.position.x << ", "
             << marker.pose.position.y <<  ")";
@@ -134,7 +149,7 @@ class AddMarkers {
         marker.action = visualization_msgs::Marker::DELETE;
 
         std::ostringstream publish_text;
-        publish_text << "Deleting marker: [" << id << "]";
+        publish_text << "Hiding marker: [" << id << "]";
 
         publish_marker_(marker, publish_text);
     }
@@ -156,7 +171,7 @@ class AddMarkers {
         marker.action = visualization_msgs::Marker::DELETEALL;
 
         std::ostringstream publish_text;
-        publish_text << "Deleting all markers";
+        publish_text << "Hiding all markers";
 
         publish_marker_(marker, publish_text);
     }
@@ -168,7 +183,7 @@ class AddMarkers {
     ros::ServiceClient move_robot_client_;
 
     // Map to store the markers' IDs and poses
-    std::map<int, geometry_msgs::Pose> markers_;
+    std::vector<geometry_msgs::Pose> poses_;
 
     // The fixed frame (can be specified via constructor argument, defaults to "/map")
     std::string const frame_id_;
@@ -194,21 +209,26 @@ class AddMarkers {
     }
 };  // class AddMarkers
 
+
 int main(int argc, char * * argv) {
     ros::init(argc, argv, "add_markers");
 
     // Create an AddMarkers object
     AddMarkers AMObject;
 
-    // The pickup marker
-    int pickup_marker = AMObject.New(1.0, 0.0, -1.0);
+    // Perform the pickup
+    int pickup_marker = AMObject.New(3.0, 0.0, -1.0);
     AMObject.Show(pickup_marker);
-    AMObject.MoveRobot(pickup_marker);
-    AMObject.Hide(pickup_marker);
-    sleep(5);
+    if (AMObject.MoveRobot(pickup_marker)) {
+        AMObject.Hide(pickup_marker);
+        sleep(5);
+    }
 
-    // The dropoff marker
-    int dropoff_marker = AMObject.New(1.0, 0.0, -1.0);
-    AMObject.MoveRobot(dropoff_marker);
-    AMObject.Show(dropoff_marker);
+    // Perform the dropoff
+    int dropoff_marker = AMObject.New(3.0, 2.0, -1.0);
+    if (AMObject.MoveRobot(dropoff_marker)) {;
+        AMObject.Show(dropoff_marker);
+    }
+
+    return 0;
 }

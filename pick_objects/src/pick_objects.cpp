@@ -1,7 +1,6 @@
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
 #include <move_base_msgs/MoveBaseAction.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <std_msgs/Int8.h>
 
 #include <sstream>
@@ -19,34 +18,32 @@ class PickObjects {
     {
         // Publisher of a std_msgs::Int8 message specifying the robot's moving state
         // Finishied: 0
-        // Moving:    1
-        // Failed:    2
+        // Failed:    1
+        // Moving:    2
         move_state_pub_ = n_.advertise<std_msgs::Int8>("/move_state", 10);
 
         // Server for the /pick_objects/move_robot service using the HandleMoveRequest callback function
-        move_robot_server_ = n_.advertiseService("/pick_objects/move_robot", &PickObjects::HandleMoveRequest, this);
+        move_robot_server_ = n_.advertiseService(
+            "/pick_objects/move_robot",
+            &PickObjects::HandleMoveRequest,
+            this
+        );
     }
 
     // This method sends a goal request using the MoveBaseClient and checks if the action is successfully completed
-    void HandleMoveRequest(
+    bool HandleMoveRequest(
         pick_objects::MoveToPose::Request & req,
         pick_objects::MoveToPose::Response & res
     ) {
         // Create a goal object
         move_base_msgs::MoveBaseGoal goal;
 
-        // set up the frame parameters
+        // Set up the frame parameters
         goal.target_pose.header.frame_id = frame_id_;
         goal.target_pose.header.stamp = ros::Time::now();
 
-        // Create a tf quaternion object to convert the yaw rotation input
-        tf2::Quaternion q_rot;
-        q_rot.setRPY(0, 0, req.rot);
-
         // Define the position and orientation for the robot to reach
-        goal.target_pose.pose.position.x = res.x;
-        goal.target_pose.pose.position.y = res.y;
-        tf2::convert(q_rot, goal.target_pose.pose.orientation);
+        goal.target_pose.pose = req.pose;
 
         // Keep waiting in 5 sec intervals for move_base action server to come up
         while(!move_base_client_.waitForServer(ros::Duration(5.0))) {
@@ -55,13 +52,13 @@ class PickObjects {
 
         // Send the goal position and orientation for the robot to reach
         std::ostringstream goal_oss;
-        goal_oss << "(" << res.x << ", " << res.y << ", " << res.rot <<  ")";
+        goal_oss << "(" << req.pose.position.x << ", " << req.pose.position.y << ")";
         ROS_INFO_STREAM("Sending goal: " + goal_oss.str());
         move_base_client_.sendGoal(goal);
 
         // Publish the current state as "moving" (1)
         std_msgs::Int8 move_state;
-        move_state.data = 1;
+        move_state.data = 2;
         move_state_pub_.publish(move_state);
 
         // Wait an infinite time for the results
@@ -69,19 +66,22 @@ class PickObjects {
 
         // Check if the robot rached its goal
         if(move_base_client_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
-            ROS_INFO_STREAM("The base moved to goal: " + goal_oss.str());
+            res.msg_feedback = "The base moved to goal: " + goal_oss.str();
 
             // Set current state as "finished" (0)
-            move_state.data = 0;
-        } else {
-            ROS_INFO_STREAM("The base failed to move to goal: " + goal_oss.str());
-
-            // Set current state as "failed" (2)
             move_state.data = 1;
+        } else {
+            res.msg_feedback = "The base failed to move to goal: " + goal_oss.str();
+
+            // Set current state as "failed" (1)
+            move_state.data = 0;
         }
 
         // Publish the current state
         move_state_pub_.publish(move_state);
+        ROS_INFO_STREAM(res.msg_feedback);
+
+        return move_state.data;
     }
 
   private:
