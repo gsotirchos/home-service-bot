@@ -212,7 +212,7 @@ int main(int argc, char * * argv) {
     AddMarkers AMObject;
 
     // Perform the pickup
-    int pickup_marker = AMObject.New(3.0, 0.0, -1.0);
+    int pickup_marker = AMObject.New(6.0, 4.5, 2.0);
     AMObject.Show(pickup_marker);
     if (AMObject.MoveRobot(pickup_marker)) {
         AMObject.Hide(pickup_marker);
@@ -222,8 +222,8 @@ int main(int argc, char * * argv) {
     }
 
     // Perform the dropoff
-    int dropoff_marker = AMObject.New(3.0, 2.0, -1.0);
-    if (AMObject.MoveRobot(dropoff_marker)) {;
+    int dropoff_marker = AMObject.New(-3.0, -7.0, -1.0);
+    if (AMObject.MoveRobot(dropoff_marker)) {
         AMObject.Show(dropoff_marker);
     } else {
         return 1;
