@@ -49,7 +49,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 0.800000012
+    - Alpha: 0.899999976
       Class: rviz/RobotModel
       Collision Enabled: false
       Enabled: true
@@ -339,7 +339,7 @@ Visualization Manager:
       Marker Topic: /visualization_marker
       Name: Marker
       Namespaces:
-        goal_markers: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -398,4 +398,4 @@ Window Geometry:
     collapsed: true
   Width: 1918
   X: 2
-  Y: 1027
+  Y: 953
