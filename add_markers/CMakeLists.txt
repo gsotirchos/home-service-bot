@@ -12,6 +12,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   tf2_geometry_msgs
+  std_srvs
   roscpp
   pick_objects
 )

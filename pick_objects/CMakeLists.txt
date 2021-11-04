@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   move_base_msgs
   tf2_geometry_msgs
   std_msgs
-  geometry_msgs
   message_generation
   roscpp
 )
@@ -25,13 +24,12 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_service_files(
   FILES
-  MoveToPose.srv
+  MarkerPose.srv
 )
 
 generate_messages(
   DEPENDENCIES
   std_msgs
-  geometry_msgs
 )
 
 ###################################

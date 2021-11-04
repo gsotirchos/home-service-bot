@@ -2,84 +2,58 @@
 #include <visualization_msgs/Marker.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <std_msgs/Int8.h>
-#include <geometry_msgs/Pose.h>
+#include <std_srvs/Trigger.h>
 
-#include <map>
-#include <vector>
+#include "pick_objects/MarkerPose.h"
 
-#include "pick_objects/MoveToPose.h"
 
 class AddMarkers {
   public:
     AddMarkers(std::string the_frame_id = "/map")
       : frame_id_{the_frame_id},
-        last_move_state{0}
+        last_robot_state{0}
     {
         // Publisher for visualization_msgs::Marker type messages with queue size of 1
         marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 
-        // Subscriber on the /move_state topic receoving updates on the robot's moving state and storing it in the last_move_state varable via the StoreMoveState callback function
+        // Subscriber on the /robot_state topic receoving updates on the robot's moving state and storing it in the last_robot_state varable via the StoreMoveState callback function
         move_state_sub_ = n_.subscribe(
-            "/move_state",
+            "/robot_state",
             10,
             &AddMarkers::StoreMoveState,
             this
         );
 
-        // Client capable of requesting services from /pick_objects/move_robot
-        move_robot_client_ = n_.serviceClient<pick_objects::MoveToPose>(
-            "/pick_objects/move_robot"
+        // Server for showing a new marker given its coordinates
+        show_marker_server_ = n_.advertiseService(
+            "/add_markers/show_marker",
+            &AddMarkers::ShowMarker,
+            this
         );
+
+        // Server for the /pick_objects/hide_all_markers service for hiding all shown markers
+        hide_markers_server_ = n_.advertiseService(
+            "/add_markers/hide_all_markers",
+            &AddMarkers::HideAllMarkers,
+            this
+        );
+
+        ROS_INFO("Ready to add markers");
     }
 
     // The robot's last received moving state
-    int last_move_state;
+    int last_robot_state;
 
     // Callback to store the received robot's moving state
     void StoreMoveState(std_msgs::Int8 const & msg) {
-        last_move_state = msg.data;
+        last_robot_state = msg.data;
     }
 
-    // Method to move the robot to a marker (specified by its ID)
-    bool MoveRobot(int id) {
-        // Request move to marker's pose
-        pick_objects::MoveToPose srv;
-        srv.request.pose = poses_[id];
-        srv.request.pose.position.z = 0;  // in case the marker was higher (just for demonstration)
-
-        // Call the move_robot service and pass the requested pose
-        if (!move_robot_client_.call(srv)) {
-        ROS_ERROR("Failed to call service move_robot");
-            return 0;
-        } else {
-            return 1;
-        }
-    }
-
-    // Method to create a new marker entry, store its pose and return its ID
-    int New(float x, float y, float rot) {
-        // Create a geometry_msgs/Pose object to properly store the pose
-        geometry_msgs::Pose pose;
-
-        // Create a tf quaternion object to convert the yaw rotation input
-        tf2::Quaternion q_rot;
-        q_rot.setRPY(0, 0, rot);
-        q_rot.normalize();
-
-        // Set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
-        pose.position.x = x;
-        pose.position.y = y;
-        pose.position.z = 0.5;
-        tf2::convert(q_rot, pose.orientation);
-
-        int id = poses_.size();
-        poses_.push_back(pose);
-
-        return id;
-    }
-
-    // Method to show a marker specified by its ID
-    int Show(int id) const {
+    // Method to show a marker
+    bool ShowMarker(
+        pick_objects::MarkerPose::Request & req,
+        pick_objects::MarkerPose::Response & res
+    ) {
         // Create a marker object
         visualization_msgs::Marker marker;
 
@@ -90,7 +64,7 @@ class AddMarkers {
         // Set the namespace and id for this marker. This serves to create a unique ID
         // Any marker sent with the same namespace and id will overwrite the old one
         marker.ns = "goal_markers";
-        marker.id = id;
+        marker.id = 0;
 
         // Set the shape type
         marker.type = visualization_msgs::Marker::SPHERE;
@@ -98,8 +72,16 @@ class AddMarkers {
         // Set the marker action. Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
         marker.action = visualization_msgs::Marker::ADD;
 
+        // Create a tf quaternion object to convert the yaw rotation input
+        tf2::Quaternion q_rot;
+        q_rot.setRPY(0, 0, req.rot);
+        q_rot.normalize();
+
         // Set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
-        marker.pose = poses_[id];
+        marker.pose.position.x = req.x;
+        marker.pose.position.y = req.y;
+        marker.pose.position.z = 0.5;
+        tf2::convert(q_rot, marker.pose.orientation);
 
         // Set the scale of the marker
         marker.scale.x = 0.2;
@@ -115,19 +97,21 @@ class AddMarkers {
         // Set infinite lifetime
         marker.lifetime = ros::Duration();
 
-        std::ostringstream publish_text;
-        publish_text << "Showing marker: ["
-            << marker.id << "] ("
-            << marker.pose.position.x << ", "
-            << marker.pose.position.y <<  ")";
+        std::ostringstream marker_oss;
+        marker_oss << "(" << req.x << ", " << req.y << ")";
+        res.msg_feedback = "Showing marker " + marker_oss.str();
+        ROS_INFO_STREAM(res.msg_feedback);
 
-        publish_marker_(marker, publish_text);
+        PublishMarker_(marker);
 
-        return marker.id;
+        return true;
     }
 
-    // Method to delete maker specified by its ID
-    void Hide(int id) const {
+    // Method to hide all shown markers
+    bool HideAllMarkers(
+        std_srvs::Trigger::Request & req,
+        std_srvs::Trigger::Response & res
+    ) {
         // Create a marker object
         visualization_msgs::Marker marker;
 
@@ -135,59 +119,33 @@ class AddMarkers {
         marker.header.frame_id = frame_id_;
         marker.header.stamp = ros::Time::now();
 
-        // Set the namespace and id for this marker. This serves to create a unique ID
-        // Any marker sent with the same namespace and id will overwrite the old one
-        marker.ns = "goal_markers";
-        marker.id = id;
-
-        // Set the marker action. Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
-        marker.action = visualization_msgs::Marker::DELETE;
-
-        std::ostringstream publish_text;
-        publish_text << "Hiding marker: [" << id << "]";
-
-        publish_marker_(marker, publish_text);
-    }
-
-    // Method to delete all shown markers
-    void HideAll() const {
-        // Create a marker object
-        visualization_msgs::Marker marker;
-
-        // Set the frame ID and timestamp. See the TF tutorials for information on these.
-        marker.header.frame_id = frame_id_;
-        marker.header.stamp = ros::Time::now();
-
-        // Set the namespace and id for this marker. This serves to create a unique ID
-        // Any marker sent with the same namespace and id will overwrite the old one
+        // Set the namespace.
         marker.ns = "goal_markers";
 
         // Set the marker action. Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
         marker.action = visualization_msgs::Marker::DELETEALL;
 
-        std::ostringstream publish_text;
-        publish_text << "Hiding all markers";
+        res.success = true;
+        res.message = "Hiding all markers";
+        ROS_INFO_STREAM(res.message);
 
-        publish_marker_(marker, publish_text);
+        PublishMarker_(marker);
+
+        return true;
     }
 
   private:
     ros::NodeHandle n_;
     ros::Publisher marker_pub_;
     ros::Subscriber move_state_sub_;
-    ros::ServiceClient move_robot_client_;
-
-    // Map to store the markers' IDs and poses
-    std::vector<geometry_msgs::Pose> poses_;
+    ros::ServiceServer show_marker_server_;
+    ros::ServiceServer hide_markers_server_;
 
     // The fixed frame (can be specified via constructor argument, defaults to "/map")
     std::string const frame_id_;
 
     // Method to perform the publishing of a created marker
-    void publish_marker_(
-        visualization_msgs::Marker & marker,
-        std::ostringstream & text_oss
-    ) const {
+    void PublishMarker_(visualization_msgs::Marker & marker) const {
         // Check if anyone's listening, at 1 sec intervals
         while (marker_pub_.getNumSubscribers() < 1) {
             if (!ros::ok()) {
@@ -199,7 +157,6 @@ class AddMarkers {
         }
 
         // Publish the marker
-        ROS_INFO_STREAM(text_oss.str());
         marker_pub_.publish(marker);
     }
 };  // class AddMarkers
@@ -211,23 +168,8 @@ int main(int argc, char * * argv) {
     // Create an AddMarkers object
     AddMarkers AMObject;
 
-    // Perform the pickup
-    int pickup_marker = AMObject.New(6.0, 4.5, 2.0);
-    AMObject.Show(pickup_marker);
-    if (AMObject.MoveRobot(pickup_marker)) {
-        AMObject.Hide(pickup_marker);
-        sleep(5);
-    } else {
-        return 1;
-    }
-
-    // Perform the dropoff
-    int dropoff_marker = AMObject.New(-3.0, -7.0, -1.0);
-    if (AMObject.MoveRobot(dropoff_marker)) {
-        AMObject.Show(dropoff_marker);
-    } else {
-        return 1;
-    }
+    // Handle ROS communication events
+    ros::spin();
 
     return 0;
 }
