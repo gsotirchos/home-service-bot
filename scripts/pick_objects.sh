@@ -2,16 +2,6 @@
 
 source "$(rospack find home_service_bot)/../scripts/util.sh"
 
-PICKUP=\
-"x: 6.0
-y: 4.0
-rot: 1.0"
-
-DROPOFF=\
-"x: -5.0
-y: -1.0
-rot: 5.0"
-
 # launch Gazebo world
 echo -n "- Launching Gazebo... "
 xterm_exec "roslaunch mapping_bot world.launch"
@@ -42,17 +32,11 @@ xterm_exec "rosrun pick_objects pick_objects"
 wait_ros node "/pick_objects"
 echo "DONE"
 
-# start the add_markers node
-echo -n "- Starting the add_markers node... "
-xterm_exec "rosrun add_markers add_markers"
-wait_ros node "/add_markers"
-echo "DONE"
-
-echo "- Adding PICKUP marker at (x=6.0, y=4.0, rot=1.0)"
-rosservice call /add_markers/show_marker "${PICKUP}"
-
 echo "- Robot moving for PICKUP at (x=6.0, y=4.0, rot=1.0)"
-rosservice call /pick_objects/move_robot "${PICKUP}"
+rosservice call /pick_objects/move_robot \
+"x: 6.0
+y: 4.0
+rot: 1.0"
 
 # watch the /robot_state topic and wait for success
 robot_state=2
@@ -65,16 +49,15 @@ while [[ "${robot_state}" != 0 ]]; do
         read -r -d '' _ < /dev/tty
     fi
 done
-echo "- PICKUP location reached successfully"
 
-echo "- Hiding PICKUP marker"
-rosservice call /add_markers/hide_all_markers
-
-echo "- Sleeping for 5 sec"
+echo "- PICKUP location reached successfully; sleeping for 5 sec"
 sleep 5
 
 echo "- Robot moving for DROPOFF at (x=-5.0, y=-1.0, rot=5.0)"
-rosservice call /pick_objects/move_robot "${DROPOFF}"
+rosservice call /pick_objects/move_robot \
+"x: -5.0
+y: -1.0
+rot: 5.0"
 
 # watch the /robot_state topic and wait for success
 robot_state=2
@@ -89,9 +72,5 @@ while [[ "${robot_state}" != 0 ]]; do
 done
 
 echo "- DROPOFF location reached successfully"
-
-echo "- Adding DROPOFF marker at (x=-5.0, y=-1.0, rot=5.0)"
-rosservice call /add_markers/show_marker "${DROPOFF}"
-
 echo "- Press Ctrl+C to close everything"
 read -r -d '' _ < /dev/tty
