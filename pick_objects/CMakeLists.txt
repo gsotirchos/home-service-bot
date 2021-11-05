@@ -12,7 +12,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   move_base_msgs
+  visualization_msgs
   tf2_geometry_msgs
+  geometry_msgs
   std_msgs
   message_generation
   roscpp

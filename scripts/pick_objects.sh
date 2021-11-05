@@ -38,10 +38,10 @@ rosservice call /pick_objects/move_robot \
 y: 4.0
 rot: 1.0"
 
-# watch the /robot_state topic and wait for success
+# watch the /pick_objects/robot_state topic and wait for success
 robot_state=2
 while [[ "${robot_state}" != 0 ]]; do
-    robot_state="$(rostopic echo -n 1 /robot_state 2> /dev/null | head -1 | tail -c 2)"
+    robot_state="$(rostopic echo -n 1 /pick_objects/robot_state 2> /dev/null | head -1 | tail -c 2)"
 
     if [[ "${robot_state}" == 1 ]]; then
         echo "- The robot has failed to reach the PICKUP location"
@@ -49,20 +49,21 @@ while [[ "${robot_state}" != 0 ]]; do
         read -r -d '' _ < /dev/tty
     fi
 done
+echo "- PICKUP location reached successfully"
 
-echo "- PICKUP location reached successfully; sleeping for 5 sec"
+echo "- Sleeping for 5 sec"
 sleep 5
 
-echo "- Robot moving for DROPOFF at (x=-5.0, y=-1.0, rot=5.0)"
+echo "- Robot moving for DROPOFF at (x=-5.0, y=-1.0, rot=4.0)"
 rosservice call /pick_objects/move_robot \
 "x: -5.0
 y: -1.0
-rot: 5.0"
+rot: 4.0"
 
-# watch the /robot_state topic and wait for success
+# watch the /pick_objects/robot_state topic and wait for success
 robot_state=2
 while [[ "${robot_state}" != 0 ]]; do
-    robot_state="$(rostopic echo -n 1 /robot_state 2> /dev/null | head -1 | tail -c 2)"
+    robot_state="$(rostopic echo -n 1 /pick_objects/robot_state 2> /dev/null | head -1 | tail -c 2)"
 
     if [[ "${robot_state}" == 1 ]]; then
         echo "- The robot has failed to reach the PICKUP location"
@@ -70,7 +71,7 @@ while [[ "${robot_state}" != 0 ]]; do
         read -r -d '' _ < /dev/tty
     fi
 done
-
 echo "- DROPOFF location reached successfully"
+
 echo "- Press Ctrl+C to close everything"
 read -r -d '' _ < /dev/tty

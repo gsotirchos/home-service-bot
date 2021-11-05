@@ -3,6 +3,10 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <std_msgs/Int8.h>
 #include <std_srvs/Trigger.h>
+#include <move_base_msgs/MoveBaseGoal.h>
+#include <move_base_msgs/MoveBaseActionGoal.h>
+
+#include <sstream>
 
 #include "pick_objects/MarkerPose.h"
 
@@ -11,63 +15,120 @@ class AddMarkers {
   public:
     AddMarkers(std::string the_frame_id = "/map")
       : frame_id_{the_frame_id},
-        last_robot_state{0}
+        marker_state_{0},
+        last_robot_state_{0}
     {
-        // Publisher for visualization_msgs::Marker type messages with queue size of 1
+        // Publisher for visualization_msgs::Marker messages, for sending markers to RViz
         marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
 
-        // Subscriber on the /robot_state topic receoving updates on the robot's moving state and storing it in the last_robot_state varable via the StoreMoveState callback function
-        move_state_sub_ = n_.subscribe(
-            "/robot_state",
+        // Publisher of a std_msgs::Int8 message indicating the marker's current state
+        marker_state_pub_ = n_.advertise<std_msgs::Int8>("/add_markers/marker_state", 10);
+
+        // Subscriber to the /pick_objects/robot_state topic receiving updates on the robot's moving state and acting accordingly via the HandleRobotState callback function
+        robot_state_sub_ = n_.subscribe(
+            "/pick_objects/robot_state",
             10,
-            &AddMarkers::StoreMoveState,
+            &AddMarkers::HandleRobotState_,
             this
         );
+
+        // Subscriber to the /move_base/goal topic for storing the last issued goal
+        robot_goal_sub_ = n_.subscribe(
+            "/move_base/goal",
+            10,
+            &AddMarkers::HandleRobotGoal_,
+            this
+        );
+
 
         // Server for showing a new marker given its coordinates
         show_marker_server_ = n_.advertiseService(
             "/add_markers/show_marker",
-            &AddMarkers::ShowMarker,
+            &AddMarkers::ShowMarker_,
             this
         );
 
         // Server for the /pick_objects/hide_all_markers service for hiding all shown markers
-        hide_markers_server_ = n_.advertiseService(
-            "/add_markers/hide_all_markers",
-            &AddMarkers::HideAllMarkers,
+        hide_marker_server_ = n_.advertiseService(
+            "/add_markers/hide_marker",
+            &AddMarkers::HideMarker_,
             this
         );
 
         ROS_INFO("Ready to add markers");
     }
 
-    // The robot's last received moving state
-    int last_robot_state;
+  private:
+    ros::NodeHandle n_;
+    ros::Publisher marker_pub_;
+    ros::Publisher marker_state_pub_;
+    ros::Subscriber robot_state_sub_;
+    ros::Subscriber robot_goal_sub_;
+    ros::ServiceServer show_marker_server_;
+    ros::ServiceServer hide_marker_server_;
 
-    // Callback to store the received robot's moving state
-    void StoreMoveState(std_msgs::Int8 const & msg) {
-        last_robot_state = msg.data;
+    // The fixed frame (can be specified via constructor argument, defaults to "/map")
+    std::string const frame_id_;
+
+    // The current marker state
+    // Finished: 0
+    // Pickup:   1
+    // Dropoff:  2
+    int marker_state_;
+
+    // The robot's last moving state ("finished", "failed", or "moving"),
+    // published by the pick_objects node
+    int last_robot_state_;
+
+    // The robot's last issued move_base goal
+    // published by the move_base node
+    move_base_msgs::MoveBaseGoal last_robot_goal_;
+
+    // Callback to act according to the published robot's moving state by the pick_objects node
+    void HandleRobotState_(std_msgs::Int8 const & msg) {
+        last_robot_state_ = msg.data;
+
+        // If the robot is s not moving (!2)
+        if (last_robot_state_ != 2) {
+            // ...and this is a dropoff (2) marker, then show the marker
+            if (marker_state_ == 2) {
+                visualization_msgs::Marker marker;
+                marker.pose = last_robot_goal_.target_pose.pose;
+                marker.pose.position.z = 0.2;
+                marker.action = visualization_msgs::Marker::ADD;
+                PublishMarker_(marker);
+
+                // Set the current marker's state to "finished" (0)
+                SetMarkerState_(0);
+            // ...and this is a pickup (1) marker, then hide the marker
+            } else if (marker_state_ == 1) {
+                visualization_msgs::Marker marker;
+                marker.action = visualization_msgs::Marker::DELETEALL;
+                PublishMarker_(marker);
+
+                // Set the current marker's state to "pickup" (2)
+                SetMarkerState_(2);
+            }
+        }
+    }
+
+    // Callback to store the goal issued to move_base
+    void HandleRobotGoal_(move_base_msgs::MoveBaseActionGoal const & msg) {
+        last_robot_goal_ = msg.goal;
     }
 
     // Method to show a marker
-    bool ShowMarker(
+    bool ShowMarker_(
         pick_objects::MarkerPose::Request & req,
         pick_objects::MarkerPose::Response & res
     ) {
+        std::ostringstream marker_oss;
+        marker_oss << "(" << req.x << ", " << req.y << ")";
+        res.msg_feedback = "Showing marker " + marker_oss.str();
+        ROS_INFO_STREAM(res.msg_feedback);
+
         // Create a marker object
         visualization_msgs::Marker marker;
-
-        // Set the frame ID and timestamp. See the TF tutorials for information on these.
-        marker.header.frame_id = frame_id_;
-        marker.header.stamp = ros::Time::now();
-
-        // Set the namespace and id for this marker. This serves to create a unique ID
-        // Any marker sent with the same namespace and id will overwrite the old one
-        marker.ns = "goal_markers";
-        marker.id = 0;
-
-        // Set the shape type
-        marker.type = visualization_msgs::Marker::SPHERE;
 
         // Set the marker action. Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
         marker.action = visualization_msgs::Marker::ADD;
@@ -80,8 +141,60 @@ class AddMarkers {
         // Set the pose of the marker. This is a full 6DOF pose relative to the frame/time specified in the header
         marker.pose.position.x = req.x;
         marker.pose.position.y = req.y;
-        marker.pose.position.z = 0.5;
+        marker.pose.position.z = 0.2;
         tf2::convert(q_rot, marker.pose.orientation);
+
+        PublishMarker_(marker);
+
+        // Set the current marker's state to "pickup" (1)
+        SetMarkerState_(1);
+
+        return true;
+    }
+
+    // Method to hide all shown markers
+    bool HideMarker_(
+        std_srvs::Trigger::Request & req,
+        std_srvs::Trigger::Response & res
+    ) {
+        res.success = true;
+        res.message = "Hiding marker";
+        ROS_INFO_STREAM(res.message);
+
+        // Create a marker object
+        visualization_msgs::Marker marker;
+
+        // Set the marker action. Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
+        marker.action = visualization_msgs::Marker::DELETEALL;
+
+        PublishMarker_(marker);
+
+        return true;
+    }
+
+    // Method to publish a marker
+    void PublishMarker_(visualization_msgs::Marker & marker) const {
+        // Check if anyone's listening, at 1 sec intervals
+        while (marker_pub_.getNumSubscribers() < 1) {
+            if (!ros::ok()) {
+                return;
+            }
+
+            ROS_WARN_ONCE("Please create a subscriber to the marker");
+            ros::Duration(1.0).sleep();
+        }
+
+        // Set the frame ID and timestamp. See the TF tutorials for information on these.
+        marker.header.frame_id = frame_id_;
+        marker.header.stamp = ros::Time::now();
+
+        // Set the namespace and id for this marker. This serves to create a unique ID
+        // Any marker sent with the same namespace and id will overwrite the old one
+        marker.ns = "goal_markers";
+        marker.id = 0;
+
+        // Set the shape type
+        marker.type = visualization_msgs::Marker::SPHERE;
 
         // Set the scale of the marker
         marker.scale.x = 0.2;
@@ -97,67 +210,16 @@ class AddMarkers {
         // Set infinite lifetime
         marker.lifetime = ros::Duration();
 
-        std::ostringstream marker_oss;
-        marker_oss << "(" << req.x << ", " << req.y << ")";
-        res.msg_feedback = "Showing marker " + marker_oss.str();
-        ROS_INFO_STREAM(res.msg_feedback);
-
-        PublishMarker_(marker);
-
-        return true;
-    }
-
-    // Method to hide all shown markers
-    bool HideAllMarkers(
-        std_srvs::Trigger::Request & req,
-        std_srvs::Trigger::Response & res
-    ) {
-        // Create a marker object
-        visualization_msgs::Marker marker;
-
-        // Set the frame ID and timestamp. See the TF tutorials for information on these.
-        marker.header.frame_id = frame_id_;
-        marker.header.stamp = ros::Time::now();
-
-        // Set the namespace.
-        marker.ns = "goal_markers";
-
-        // Set the marker action. Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
-        marker.action = visualization_msgs::Marker::DELETEALL;
-
-        res.success = true;
-        res.message = "Hiding all markers";
-        ROS_INFO_STREAM(res.message);
-
-        PublishMarker_(marker);
-
-        return true;
-    }
-
-  private:
-    ros::NodeHandle n_;
-    ros::Publisher marker_pub_;
-    ros::Subscriber move_state_sub_;
-    ros::ServiceServer show_marker_server_;
-    ros::ServiceServer hide_markers_server_;
-
-    // The fixed frame (can be specified via constructor argument, defaults to "/map")
-    std::string const frame_id_;
-
-    // Method to perform the publishing of a created marker
-    void PublishMarker_(visualization_msgs::Marker & marker) const {
-        // Check if anyone's listening, at 1 sec intervals
-        while (marker_pub_.getNumSubscribers() < 1) {
-            if (!ros::ok()) {
-                return;
-            }
-
-            ROS_WARN_ONCE("Please create a subscriber to the marker");
-            ros::Duration(1.0).sleep();
-        }
-
         // Publish the marker
         marker_pub_.publish(marker);
+    }
+
+    // Method to set and publish the marker's state
+    void SetMarkerState_(int state) {
+        marker_state_ = state;
+        std_msgs::Int8 marker_state;
+        marker_state.data = state;
+        marker_state_pub_.publish(marker_state);
     }
 };  // class AddMarkers
 
