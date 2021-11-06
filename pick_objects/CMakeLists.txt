@@ -3,9 +3,6 @@ project(pick_objects)
 
 add_compile_options(-std=c++11)
 
-# required for cpp language server
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -38,7 +35,9 @@ generate_messages(
 ## catkin specific configuration ##
 ###################################
 
-catkin_package()
+catkin_package(
+  INCLUDE_DIRS include
+)
 
 ###########
 ## Build ##
@@ -47,7 +46,7 @@ catkin_package()
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  #include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -57,4 +56,15 @@ target_link_libraries(pick_objects ${catkin_LIBRARIES})
 add_dependencies(pick_objects
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
+)
+
+#############
+## Install ##
+#############
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )

@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include "pick_objects/MarkerPose.h"
+#include "pick_objects/utils.h"
 
 
 // Typedef for a SimpleActionClient for sending goal requests to the move_base server
@@ -64,9 +65,6 @@ class PickObjects {
     std::string const frame_id_;
 
     // The robot's current moving state
-    // Finished: 0
-    // Failed:   1
-    // Moving:   2
     int robot_state_;
 
     // The last marker state ("finished", "pickup", or "dropoff"),
@@ -80,8 +78,9 @@ class PickObjects {
     void HandleMarkerState_(std_msgs::Int8 const & msg) {
         last_marker_state_ = msg.data;
 
-        // If the robot is not moving (!2) and this is a pickup (1) marker, then move the robot
-        if (robot_state_ != 2 && last_marker_state_ == 1) {
+        // If the robot is not moving (!2) and this is a pickup marker, then move the robot
+        if (robot_state_ != pick_objects::RobotState::MOVING
+                && last_marker_state_ == add_markers::MarkerState::PICKUP) {
             SendGoal_(marker_.pose);
         }
     }
@@ -147,8 +146,8 @@ class PickObjects {
 
     // Callback to update current robot state, once the action is started
     void ActiveCallback_() {
-        // Set current robot's state as "moving" (2)
-        SetRobotState_(2);
+        // Set current robot's state as "moving"
+        SetRobotState_(pick_objects::RobotState::MOVING);
     }
 
     // Callback to update current robot state, once the action is finished
@@ -160,13 +159,13 @@ class PickObjects {
         if(state == actionlib::SimpleClientGoalState::SUCCEEDED) {
             ROS_INFO_STREAM("The base moved to goal successfully");
 
-            // Set current robot's state as "finished" (0)
-            SetRobotState_(0);
+            // Set current robot's state as "finished"
+            SetRobotState_(pick_objects::RobotState::FINISHED);
         } else {
             ROS_INFO_STREAM("The base failed to move to goal");
 
-            // Set current state as "failed" (1)
-            SetRobotState_(1);
+            // Set current state as "failed"
+            SetRobotState_(pick_objects::RobotState::FAILED);
         }
     }
 

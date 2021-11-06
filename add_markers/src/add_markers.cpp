@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include "pick_objects/MarkerPose.h"
+#include "pick_objects/utils.h"
 
 
 class AddMarkers {
@@ -71,9 +72,6 @@ class AddMarkers {
     std::string const frame_id_;
 
     // The current marker state
-    // Finished: 0
-    // Pickup:   1
-    // Dropoff:  2
     int marker_state_;
 
     // The robot's last moving state ("finished", "failed", or "moving"),
@@ -89,25 +87,25 @@ class AddMarkers {
         last_robot_state_ = msg.data;
 
         // If the robot is s not moving (!2)
-        if (last_robot_state_ != 2) {
-            // ...and this is a dropoff (2) marker, then show the marker
-            if (marker_state_ == 2) {
+        if (last_robot_state_ != pick_objects::RobotState::MOVING) {
+            // ...and this is a dropoff marker, then show the marker
+            if (marker_state_ == add_markers::MarkerState::DROPOFF) {
                 visualization_msgs::Marker marker;
                 marker.pose = last_robot_goal_.target_pose.pose;
                 marker.pose.position.z = 0.2;
                 marker.action = visualization_msgs::Marker::ADD;
                 PublishMarker_(marker);
 
-                // Set the current marker's state to "finished" (0)
-                SetMarkerState_(0);
-            // ...and this is a pickup (1) marker, then hide the marker
+                // Set the current marker's state to "finished"
+                SetMarkerState_(add_markers::MarkerState::FINISHED);
+            // ...and this is a pickup marker, then hide the marker
             } else if (marker_state_ == 1) {
                 visualization_msgs::Marker marker;
                 marker.action = visualization_msgs::Marker::DELETEALL;
                 PublishMarker_(marker);
 
-                // Set the current marker's state to "pickup" (2)
-                SetMarkerState_(2);
+                // Set the current marker's state to "dropoff"
+                SetMarkerState_(add_markers::MarkerState::DROPOFF);
             }
         }
     }
@@ -146,8 +144,8 @@ class AddMarkers {
 
         PublishMarker_(marker);
 
-        // Set the current marker's state to "pickup" (1)
-        SetMarkerState_(1);
+        // Set the current marker's state to "pickup"
+        SetMarkerState_(add_markers::MarkerState::PICKUP);
 
         return true;
     }
