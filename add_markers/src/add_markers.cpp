@@ -86,7 +86,7 @@ class AddMarkers {
     void HandleRobotState_(std_msgs::Int8 const & msg) {
         last_robot_state_ = msg.data;
 
-        // If the robot is s not moving (!2)
+        // If the robot is s not moving
         if (last_robot_state_ != pick_objects::RobotState::MOVING) {
             // ...and this is a dropoff marker, then show the marker
             if (marker_state_ == add_markers::MarkerState::DROPOFF) {
@@ -99,7 +99,7 @@ class AddMarkers {
                 // Set the current marker's state to "finished"
                 SetMarkerState_(add_markers::MarkerState::FINISHED);
             // ...and this is a pickup marker, then hide the marker
-            } else if (marker_state_ == 1) {
+            } else if (marker_state_ == add_markers::PICKUP) {
                 visualization_msgs::Marker marker;
                 marker.action = visualization_msgs::Marker::DELETEALL;
                 PublishMarker_(marker);

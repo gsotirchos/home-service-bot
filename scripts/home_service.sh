@@ -48,11 +48,8 @@ xterm_exec "rosrun add_markers add_markers"
 wait_ros node "/add_markers"
 echo "DONE"
 
-echo "- Adding PICKUP marker at (x=6.0, y=4.0, rot=1.0)"
+echo "- Adding PICKUP marker at (x: 6.0, y: 4.0, rot: 1.0)"
 rosservice call /add_markers/show_marker "${PICKUP}"
-
-#echo "- Robot moving for PICKUP at (x=6.0, y=4.0, rot=1.0)"
-#rosservice call /pick_objects/move_robot "${PICKUP}"
 
 # watch the /pick_objects/robot_state topic and wait for success
 robot_state=2
@@ -70,7 +67,7 @@ echo "- PICKUP location reached successfully"
 echo "- Sleeping for 5 sec"
 sleep 5
 
-echo "- Robot moving for DROPOFF at (x=-5.0, y=-1.0, rot=4.0)"
+echo "- Robot moving for DROPOFF at (x: -5.0, y: -1.0, rot: 4.0)"
 rosservice call /pick_objects/move_robot "${DROPOFF}"
 
 # watch the /pick_objects/robot_state topic and wait for success
@@ -79,7 +76,7 @@ while [[ "${robot_state}" != 0 ]]; do
     robot_state="$(rostopic echo -n 1 /pick_objects/robot_state 2> /dev/null | head -1 | tail -c 2)"
 
     if [[ "${robot_state}" == 1 ]]; then
-        echo "- The robot has failed to reach the PICKUP location"
+        echo "- The robot has failed to reach the DROPOFF location"
         echo "- Press Ctrl+C to close everything"
         read -r -d '' _ < /dev/tty
     fi

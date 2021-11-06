@@ -32,7 +32,7 @@ xterm_exec "rosrun pick_objects pick_objects"
 wait_ros node "/pick_objects"
 echo "DONE"
 
-echo "- Robot moving for PICKUP at (x=6.0, y=4.0, rot=1.0)"
+echo "- Robot moving for PICKUP at (x: 6.0, y: 4.0, rot: 1.0)"
 rosservice call /pick_objects/move_robot \
 "x: 6.0
 y: 4.0
@@ -54,7 +54,7 @@ echo "- PICKUP location reached successfully"
 echo "- Sleeping for 5 sec"
 sleep 5
 
-echo "- Robot moving for DROPOFF at (x=-5.0, y=-1.0, rot=4.0)"
+echo "- Robot moving for DROPOFF at (x: -5.0, y: -1.0, rot: 4.0)"
 rosservice call /pick_objects/move_robot \
 "x: -5.0
 y: -1.0

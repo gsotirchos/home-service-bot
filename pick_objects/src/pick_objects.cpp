@@ -78,7 +78,7 @@ class PickObjects {
     void HandleMarkerState_(std_msgs::Int8 const & msg) {
         last_marker_state_ = msg.data;
 
-        // If the robot is not moving (!2) and this is a pickup marker, then move the robot
+        // If the robot is not moving and this is a pickup marker, then move the robot
         if (robot_state_ != pick_objects::RobotState::MOVING
                 && last_marker_state_ == add_markers::MarkerState::PICKUP) {
             SendGoal_(marker_.pose);

@@ -32,7 +32,7 @@ xterm_exec "rosrun add_markers add_markers"
 wait_ros node "/add_markers"
 echo "DONE"
 
-echo "- Adding PICKUP marker at (x=6.0, y=4.0, rot=1.0)"
+echo "- Adding PICKUP marker at (x: 6.0, y: 4.0, rot: 1.0)"
 rosservice call /add_markers/show_marker \
 "x: 6.0
 y: 4.0
@@ -47,7 +47,7 @@ rosservice call /add_markers/hide_marker
 echo "- Sleeping for 5 sec"
 sleep 5
 
-echo "- Adding DROPOFF marker at (x=-5.0, y=-1.0, rot=5.0)"
+echo "- Adding DROPOFF marker at (x: -5.0, y: -1.0, rot: 5.0)"
 rosservice call /add_markers/show_marker \
 "x: -5.0
 y: -1.0
