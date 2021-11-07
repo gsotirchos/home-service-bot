@@ -9,6 +9,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
   tf2_geometry_msgs
+  geometry_msgs
   std_srvs
   roscpp
   pick_objects

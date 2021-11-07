@@ -15,22 +15,22 @@
 
   <build_depend>visualization_msgs</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
   <build_depend>std_srvs</build_depend>
-  <build_depend>move_base_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>pick_objects</build_depend>
 
   <build_export_depend>visualization_msgs</build_export_depend>
   <build_export_depend>tf2_geometry_msgs</build_export_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>std_srvs</build_export_depend>
-  <build_export_depend>move_base_msgs</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>pick_objects</build_export_depend>
 
   <exec_depend>visualization_msgs</exec_depend>
   <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>std_srvs</exec_depend>
-  <exec_depend>move_base_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>pick_objects</exec_depend>
 </package>

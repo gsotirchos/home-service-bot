@@ -1,10 +1,9 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <geometry_msgs/Pose.h>
 #include <std_msgs/Int8.h>
 #include <std_srvs/Trigger.h>
-#include <move_base_msgs/MoveBaseGoal.h>
-#include <move_base_msgs/MoveBaseActionGoal.h>
 
 #include <sstream>
 
@@ -35,7 +34,7 @@ class AddMarkers {
 
         // Subscriber to the /move_base/goal topic for storing the last issued goal
         robot_goal_sub_ = n_.subscribe(
-            "/move_base/goal",
+            "/move_base_simple/goal",
             10,
             &AddMarkers::HandleRobotGoal_,
             this
@@ -80,18 +79,18 @@ class AddMarkers {
 
     // The robot's last issued move_base goal
     // published by the move_base node
-    move_base_msgs::MoveBaseGoal last_robot_goal_;
+    geometry_msgs::PoseStamped last_robot_goal_;
 
     // Callback to act according to the published robot's moving state by the pick_objects node
     void HandleRobotState_(std_msgs::Int8 const & msg) {
         last_robot_state_ = msg.data;
 
-        // If the robot is s not moving
-        if (last_robot_state_ != pick_objects::RobotState::MOVING) {
+        // If the robot finished a move
+        if (last_robot_state_ == pick_objects::RobotState::FINISHED) {
             // ...and this is a dropoff marker, then show the marker
             if (marker_state_ == add_markers::MarkerState::DROPOFF) {
                 visualization_msgs::Marker marker;
-                marker.pose = last_robot_goal_.target_pose.pose;
+                marker.pose = last_robot_goal_.pose;
                 marker.pose.position.z = 0.2;
                 marker.action = visualization_msgs::Marker::ADD;
                 PublishMarker_(marker);
@@ -111,8 +110,8 @@ class AddMarkers {
     }
 
     // Callback to store the goal issued to move_base
-    void HandleRobotGoal_(move_base_msgs::MoveBaseActionGoal const & msg) {
-        last_robot_goal_ = msg.goal;
+    void HandleRobotGoal_(geometry_msgs::PoseStamped const & msg) {
+        last_robot_goal_ = msg;
     }
 
     // Method to show a marker
