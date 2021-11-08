@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source "$(rospack find home_service_bot)/../scripts/utils.sh"
+source "$(rospack find home_service_bot)/../scripts/utils.sh" || exit
 
 PICKUP=\
 "x: 6.0

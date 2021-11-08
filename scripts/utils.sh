@@ -4,7 +4,7 @@
 
 # kill all subprocesses on termination
 set +m
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+trap 'kill $(jobs -p) &> /dev/null' SIGINT SIGTERM EXIT
 
 killall roscore rosmaster gzclient gzserver &> /dev/null
 
