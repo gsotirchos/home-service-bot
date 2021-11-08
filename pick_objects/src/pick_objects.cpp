@@ -13,12 +13,12 @@
 
 
 // Typedef for a SimpleActionClient for sending goal requests to the move_base server
-typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
+typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseActionClient;
 
 class PickObjects {
   public:
     PickObjects(std::string the_frame_id = "map")
-      : move_base_client_("move_base", true),
+      : move_base_action_client_("move_base", true),
         frame_id_{the_frame_id},
         robot_state_{0},
         last_marker_state_{0},
@@ -58,8 +58,8 @@ class PickObjects {
     ros::Publisher robot_state_pub_;
     ros::Subscriber marker_state_sub_;
     ros::Subscriber marker_sub_;
-    MoveBaseClient move_base_client_;
     ros::ServiceServer move_robot_server_;
+    MoveBaseActionClient move_base_action_client_;
 
     // The fixed frame (can be specified via constructor argument, defaults to "map")
     std::string const frame_id_;
@@ -91,7 +91,7 @@ class PickObjects {
         marker_.pose.position.z = 0;
     }
 
-    // This method sends a goal request using the MoveBaseClient and checks if the action is successfully completed
+    // This method sends a goal request using the MoveBaseActionClient and checks if the action is successfully completed
     bool HandleMoveRequest_(
         pick_objects::MarkerPose::Request & req,
         pick_objects::MarkerPose::Response & res
@@ -121,7 +121,7 @@ class PickObjects {
     // Method to send a goal for a given pose
     void SendGoal_(geometry_msgs::Pose target_pose) {
         // Keep waiting in 5 sec intervals for move_base action server to come up
-        while(!move_base_client_.waitForServer(ros::Duration(5.0))) {
+        while(!move_base_action_client_.waitForServer(ros::Duration(5.0))) {
             ROS_INFO("Waiting for the move_base action server to come up");
         }
 
@@ -136,11 +136,11 @@ class PickObjects {
         goal.target_pose.pose = target_pose;
 
         // Send the goal position and orientation for the robot to reach
-        move_base_client_.sendGoal(
+        move_base_action_client_.sendGoal(
             goal,
             boost::bind(&PickObjects::DoneCallback_, this, _1, _2),
             boost::bind(&PickObjects::ActiveCallback_, this),
-            MoveBaseClient::SimpleFeedbackCallback()
+            MoveBaseActionClient::SimpleFeedbackCallback()
         );
     }
 
