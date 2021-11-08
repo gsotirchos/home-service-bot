@@ -125,6 +125,8 @@ All the launch files used can be found in the [mapping_bot/launch](https://githu
 
 ### add_markers
 
+In addition to providing services for showing markers in RViz, this node implements a communication interface for cooperating with the `pick_objects` node by sharing state information using topics.
+
 #### Published Topics
 
 * `visualization_marker` ([visualization_msgs/Marker](http://docs.ros.org/en/api/visualization_msgs/html/msg/Marker.html))
@@ -149,7 +151,7 @@ All the launch files used can be found in the [mapping_bot/launch](https://githu
 
 * `/move_base_simple/goal` ([geometry_msgs/PoseStamped](http://docs.ros.org/en/api/geometry_msgs/html/msg/PoseStamped.html))
 
-    Receive the last issued goal for the robot. This information is used to specify the location of the marker shown after a sucessfull dropoff.
+    Receive the last issued goal for the robot. This information is used to determine the location of the marker shown after a sucessful dropoff.
 
 #### Services
 
@@ -174,7 +176,40 @@ All the launch files used can be found in the [mapping_bot/launch](https://githu
 
 ### pick_objects
 
-<!-- TODO -->
+A [SimpleActionClient](https://docs.ros.org/en/diamondback/api/actionlib/html/classactionlib_1_1SimpleActionClient.html)\<[MoveBaseAction](http://docs.ros.org/en/fuerte/api/move_base_msgs/html/msg/MoveBaseAction.html)\> client is provided, which is capable of sending navigation goals to `move_base` and receiving the action's status information upon completion. This node also implements a communication interface for cooperating with the `add_markers` node by sharing state information using topics.
+
+* `/pick_objects/robot_state` ([std_msgs/Int8](http://docs.ros.org/en/api/std_msgs/html/msg/Int8.html))
+
+    The current state of the marker. Can be one of the following:
+    * Finished = 0<br/>
+        The robot has succesfully moved to the goal location. By sharing this state information the `add_markers` node is able to proceed to the next pickup/dropoff procedure state.
+    * Failed = 1<br/>
+        The robot has failed to move to the goal location. This state change does not advance the pickup/dropoff procedure.
+    * Moving = 2<br/>
+        The robot is now moving towards the goal location. This state change does not advance the pickup/dropoff procedure.
+
+#### Subscribed Topics
+
+* `/add_markers/marker_state` ([std_msgs/Int8](http://docs.ros.org/en/api/std_msgs/html/msg/Int8.html))
+
+    Receive information about changes to the marker's state. Specifically, in the event of the marker's state changing to Pickup (1) while the robot is not moving (either Finished or Failed) then the robot will start moving towards the shown pickup marker.
+
+* `visualization_marker` ([visualization_msgs/Marker](http://docs.ros.org/en/api/visualization_msgs/html/msg/Marker.html))
+
+    The marker message published by the `add_markers` node. This information is used to determine the goal location after a pickup marker is shown.
+
+#### Services
+
+* `~move_robot` ([pick_objects/MarkerPose](pick_objects/srv/MarkerPose.srv))
+
+    Moves the robot to the requested location specified by the `x` coordinate, `y` coordinate, and `rot` rotation.
+
+    ``` bash
+    rosservice call /pick_objects/move_robot \
+    "x: 0.0
+    y: 0.0
+    rot: 0.0"
+    ```
 
 ### rtabmap
 
@@ -182,7 +217,7 @@ The aspects of the `rtabmap` node used in this project are the same as [those us
 
 ### move_base
 
-The [SimpleActionServer](https://docs.ros.org/en/api/actionlib/html/classactionlib_1_1SimpleActionServer.html) server implementation provided by `move_base` is utilized to move the robot while monitoring its state by sending goals from the `pick_objects` node using a [SimpleActionClient](https://docs.ros.org/en/diamondback/api/actionlib/html/classactionlib_1_1SimpleActionClient.html)\<[MoveBaseAction](http://docs.ros.org/en/fuerte/api/move_base_msgs/html/msg/MoveBaseAction.html)\> client.
+The [SimpleActionServer](https://docs.ros.org/en/api/actionlib/html/classactionlib_1_1SimpleActionServer.html) server implementation provided by `move_base` is utilized to move the robot while monitoring its state by sending goals through the `pick_objects` node's [SimpleActionClient](https://docs.ros.org/en/diamondback/api/actionlib/html/classactionlib_1_1SimpleActionClient.html)\<[MoveBaseAction](http://docs.ros.org/en/fuerte/api/move_base_msgs/html/msg/MoveBaseAction.html)\> client.
 
 #### Action Subscribed Topics
 
