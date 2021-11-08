@@ -1,8 +1,18 @@
 [submodule "mapping-bot"]
 	path = mapping-bot
 	url = https://github.com/7555G/mapping-bot
-
-[submodule "slam_gmapping"]
+[submodule "turtlebot_packages/slam_gmapping"]
 	path = turtlebot_packages/slam_gmapping
 	url = https://github.com/ros-perception/slam_gmapping
-
+[submodule "turtlebot_packages/turtlebot"]
+	path = turtlebot_packages/turtlebot
+	url = https://github.com/turtlebot/turtlebot
+	branch = kinetic
+[submodule "turtlebot_packages/turtlebot_interactions"]
+	path = turtlebot_packages/turtlebot_interactions
+	url = https://github.com/turtlebot/turtlebot_interactions
+	branch = indigo
+[submodule "turtlebot_packages/turtlebot_simulator"]
+	path = turtlebot_packages/turtlebot_simulator
+	url = https://github.com/turtlebot/turtlebot_simulator
+	branch = indigo
