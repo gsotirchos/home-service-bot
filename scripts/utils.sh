@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-# utitilities and settings for shell scripts testing ROS packages
+# utitilities for shell scripts for launching ROS packages
 
 # kill all subprocesses on termination
-set +m
-trap 'kill $(jobs -p) &> /dev/null' SIGINT SIGTERM EXIT
+set -e
+trap 'kill 0 &> /dev/null' SIGINT EXIT
 
 killall roscore rosmaster gzclient gzserver &> /dev/null
 
-# function to open an xterm window, execute a command, and wait for a ROS node to be brought up
+# function to open an xterm window, execute a command, and redirect the stderr to the calling tty
 xterm_exec() {
-    cmd="$1"
+    cmd="$1 2> $(tty)"
 
     font="fixed"
     size=11
@@ -19,6 +19,7 @@ xterm_exec() {
     xterm -geometry "${geom}" -fa "${font}" -fs "${size}" -e "${cmd}" &
 }
 
+# function to wait for a rosnode or rostopic to be brought up
 wait_ros() {
     suffix="$1"
     query="$2"
@@ -26,9 +27,9 @@ wait_ros() {
     case "${suffix}" in
       node|topic)
         ;;
-    *)
+      *)
         echo "Error: First parameter can be either \"node\" or \"topic\"."
-        return
+        return 1
         ;;
     esac
 
