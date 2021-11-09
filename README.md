@@ -141,7 +141,7 @@ In addition to providing services for showing markers in RViz, this node impleme
     * Pickup = 1<br/>
         A pickup is to be executed. If notified about the robot's state changing to Finished (0) then any markers will be hidden and the marker's state will advance to Dropoff (2).
     * Dropoff = 2<br/>
-        A dropoff is to be performed. If notified about the robot's state changing to Finished (0) then a marker will be shown at the last goal issued to `move_base` and the marker's state will advance to Finished (0).
+        A dropoff is to be executed. If notified about the robot's state changing to Finished (0) then a marker will be shown at the last goal issued to `move_base` and the marker's state will advance to Finished (0).
 
 #### Subscribed Topics
 
