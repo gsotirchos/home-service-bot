@@ -34,10 +34,7 @@ main() {
     echo "DONE"
 
     echo "- Adding PICKUP marker at (x: 6.0, y: 4.0, rot: 1.0)"
-    rosservice call /add_markers/show_marker \
-    "x: 6.0
-    y: 4.0
-    rot: 1.0"
+    rosservice call /add_markers/show_marker $'x: 6.0\ny: 4.0\nrot: 1.0'
 
     echo "- Sleeping for 5 sec"
     sleep 5
@@ -49,10 +46,7 @@ main() {
     sleep 5
 
     echo "- Adding DROPOFF marker at (x: -5.0, y: -1.0, rot: 5.0)"
-    rosservice call /add_markers/show_marker \
-    "x: -5.0
-    y: -1.0
-    rot: 4.0"
+    rosservice call /add_markers/show_marker $'x: -5.0\ny: -1.0\nrot: 4.0'
 
     echo "- Press Ctrl+C to close everything"
     read -r -d '' _ < /dev/tty

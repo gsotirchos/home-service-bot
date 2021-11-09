@@ -3,15 +3,8 @@
 main() {
     source "$(rospack find home_service_bot)/../scripts/utils.sh" || exit
 
-    PICKUP=\
-    "x: 6.0
-    y: 4.0
-    rot: 1.0"
-
-    DROPOFF=\
-    "x: -5.0
-    y: -1.0
-    rot: 4.0"
+    PICKUP=$'x: 6.0\ny: 4.0\nrot: 1.0'
+    DROPOFF=$'x: -5.0\ny: -1.0\nrot: 4.0'
 
     # launch Gazebo world
     echo -n "- Launching Gazebo... "

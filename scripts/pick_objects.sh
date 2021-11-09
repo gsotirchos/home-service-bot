@@ -34,10 +34,7 @@ main() {
     echo "DONE"
 
     echo "- Robot moving for PICKUP at (x: 6.0, y: 4.0, rot: 1.0)"
-    rosservice call /pick_objects/move_robot \
-    "x: 6.0
-    y: 4.0
-    rot: 1.0"
+    rosservice call /pick_objects/move_robot $'x: 6.0\ny: 4.0\nrot: 1.0'
 
     # watch the /pick_objects/robot_state topic and wait for success
     robot_state=2
@@ -56,10 +53,7 @@ main() {
     sleep 5
 
     echo "- Robot moving for DROPOFF at (x: -5.0, y: -1.0, rot: 4.0)"
-    rosservice call /pick_objects/move_robot \
-    "x: -5.0
-    y: -1.0
-    rot: 4.0"
+    rosservice call /pick_objects/move_robot $'x: -5.0\ny: -1.0\brot: 4.0'
 
     # watch the /pick_objects/robot_state topic and wait for success
     robot_state=2
