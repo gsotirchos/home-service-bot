@@ -20,8 +20,8 @@ class PickObjects {
     PickObjects(std::string the_frame_id = "map")
       : move_base_action_client_("move_base", true),
         frame_id_{the_frame_id},
-        robot_state_{0},
-        last_marker_state_{0},
+        robot_state_{pick_objects::RobotState::FINISHED},
+        last_marker_state_{add_markers::MarkerState::FINISHED},
         marker_{}
     {
         // Publisher of a std_msgs::Int8 message indicating the robot's current moving state
@@ -80,7 +80,7 @@ class PickObjects {
 
         // If the robot is not moving and this is a pickup marker, then move the robot
         if (robot_state_ != pick_objects::RobotState::MOVING
-                && last_marker_state_ == add_markers::MarkerState::PICKUP) {
+            && last_marker_state_ == add_markers::MarkerState::PICKUP) {
             SendGoal_(marker_.pose);
         }
     }

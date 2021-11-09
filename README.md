@@ -149,9 +149,9 @@ In addition to providing services for showing markers in RViz, this node impleme
 
     Receive information about changes to the robot's state. Specifically, when the robot's state changes to Finished (0) then either a pickup or a dropoff has been completed and a marker will have to be hidden or shown respectivelly.
 
-* `/move_base_simple/goal` ([geometry_msgs/PoseStamped](http://docs.ros.org/en/api/geometry_msgs/html/msg/PoseStamped.html))
+* `/move_base/goal` ([move_base_msgs/MoveBaseActionGoal](http://docs.ros.org/en/fuerte/api/move_base_msgs/html/msg/MoveBaseActionGoal.html))
 
-    Receive the last issued goal for the robot. This information is used to determine the location of the marker shown after a sucessful dropoff.
+    Receive the last issued navigation goal for `move_base`. The goal's pose information is used to determine the location of the marker shown after a sucessful dropoff.
 
 #### Services
 
@@ -178,6 +178,8 @@ In addition to providing services for showing markers in RViz, this node impleme
 
 A [SimpleActionClient](https://docs.ros.org/en/diamondback/api/actionlib/html/classactionlib_1_1SimpleActionClient.html)\<[MoveBaseAction](http://docs.ros.org/en/fuerte/api/move_base_msgs/html/msg/MoveBaseAction.html)\> client is provided, which is capable of sending navigation goals to `move_base` and receiving the action's status information upon completion. This node also implements a communication interface for cooperating with the `add_markers` node by sharing state information using topics.
 
+#### Published Topics
+
 * `/pick_objects/robot_state` ([std_msgs/Int8](http://docs.ros.org/en/api/std_msgs/html/msg/Int8.html))
 
     The current state of the marker. Can be one of the following:
@@ -187,6 +189,10 @@ A [SimpleActionClient](https://docs.ros.org/en/diamondback/api/actionlib/html/cl
         The robot has failed to move to the goal location. This state change does not advance the pickup/dropoff procedure.
     * Moving = 2<br/>
         The robot is now moving towards the goal location. This state change does not advance the pickup/dropoff procedure.
+
+* `/move_base/goal` ([move_base_msgs/MoveBaseActionGoal](http://docs.ros.org/en/fuerte/api/move_base_msgs/html/msg/MoveBaseActionGoal.html))
+
+    The navigation goal for `move_base` published via the `pick_objects` action client.
 
 #### Subscribed Topics
 
@@ -230,12 +236,6 @@ The [SimpleActionServer](https://docs.ros.org/en/api/actionlib/html/classactionl
 * `move_base/status` ([actionlib_msgs/GoalStatusArray](http://docs.ros.org/en/api/actionlib_msgs/html/msg/GoalStatusArray.html))
 
     Provides status information on the goals that are sent to the `move_base` action.
-
-### rviz
-
-* `/move_base_simple/goal` ([geometry_msgs/PoseStamped](http://docs.ros.org/en/api/geometry_msgs/html/msg/PoseStamped.html))
-
-    The goal sent to `move_base` published as a stamped pose.
 
 ## Bugs & Feature Requests
 

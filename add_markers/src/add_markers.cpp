@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <geometry_msgs/Pose.h>
+#include <move_base_msgs/MoveBaseActionGoal.h>
 #include <std_msgs/Int8.h>
 #include <std_srvs/Trigger.h>
 
@@ -15,8 +15,8 @@ class AddMarkers {
   public:
     AddMarkers(std::string the_frame_id = "/map")
       : frame_id_{the_frame_id},
-        marker_state_{0},
-        last_robot_state_{0}
+        marker_state_{add_markers::MarkerState::FINISHED},
+        last_robot_state_{pick_objects::RobotState::FINISHED}
     {
         // Publisher for visualization_msgs::Marker messages, for sending markers to RViz
         marker_pub_ = n_.advertise<visualization_msgs::Marker>("visualization_marker", 1);
@@ -34,7 +34,7 @@ class AddMarkers {
 
         // Subscriber to the /move_base/goal topic for storing the last issued goal
         robot_goal_sub_ = n_.subscribe(
-            "/move_base_simple/goal",
+            "/move_base/goal",
             10,
             &AddMarkers::HandleRobotGoal_,
             this
@@ -79,7 +79,7 @@ class AddMarkers {
 
     // The robot's last issued move_base goal
     // published by the move_base node
-    geometry_msgs::PoseStamped last_robot_goal_;
+    move_base_msgs::MoveBaseActionGoal last_robot_goal_;
 
     // Callback to act according to the published robot's moving state by the pick_objects node
     void HandleRobotState_(std_msgs::Int8 const & msg) {
@@ -90,7 +90,7 @@ class AddMarkers {
             // ...and this is a dropoff marker, then show the marker
             if (marker_state_ == add_markers::MarkerState::DROPOFF) {
                 visualization_msgs::Marker marker;
-                marker.pose = last_robot_goal_.pose;
+                marker.pose = last_robot_goal_.goal.target_pose.pose;
                 marker.pose.position.z = 0.2;
                 marker.action = visualization_msgs::Marker::ADD;
                 PublishMarker_(marker);
@@ -110,7 +110,7 @@ class AddMarkers {
     }
 
     // Callback to store the goal issued to move_base
-    void HandleRobotGoal_(geometry_msgs::PoseStamped const & msg) {
+    void HandleRobotGoal_(move_base_msgs::MoveBaseActionGoal const & msg) {
         last_robot_goal_ = msg;
     }
 
