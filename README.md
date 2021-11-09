@@ -89,7 +89,7 @@ The various features in this meta-package can be conveniently launched with the 
 
 ### Using launch files
 
-If you prefer to manually launch each launch file rather than use the shell scripts this then the following steps achieve the same result (except for the pickup and dropoff demo).
+If you prefer to manually launch each launch file rather than use the shell scripts, then use the following steps to achieve the same result (except for the pickup and dropoff demo).
 
 1. Start the Gazebo environment containing the robot:
 
