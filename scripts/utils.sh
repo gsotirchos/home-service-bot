@@ -2,11 +2,11 @@
 
 # utitilities for shell scripts for launching ROS packages
 
+killall roscore rosmaster gzclient gzserver &> /dev/null
+
 # kill all subprocesses on termination
 set -e
 trap 'kill 0 &> /dev/null' SIGINT EXIT
-
-killall roscore rosmaster gzclient gzserver &> /dev/null
 
 # function to open an xterm window, execute a command, and redirect the stderr to the calling tty
 xterm_exec() {
