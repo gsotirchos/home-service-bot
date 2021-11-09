@@ -18,7 +18,10 @@ The source code is released under an [MIT license](LICENSE).
 
 The home-service-bot package has been tested under [ROS](https://www.ros.org) Kinetic in a docker container on Ubuntu 20.04 (see [Running in Docker](#running-in-docker) section). This is experimental, personal project code, and possibly subject to frequent changes with any need for explanation disclaimed.
 
-![Example image](media/home_service.jpg)
+<p align="center">
+  <img src="./media/pickup.gif" width="47%">
+  <img src="./media/dropoff.gif" width="47%">
+</p>
 
 ## Installation
 
@@ -82,7 +85,7 @@ The various features in this meta-package can be conveniently launched with the 
 * [**scripts/test_navigation.sh**](scripts/test_navigation.sh): Starts the Gazebo simulation environment, brings up the `rtabmap` node in *localization* mode along with the `move_base` node, starts a configured `rviz` window, and waits for the database map to load and the robot to be localized.
 * [**scripts/pick_objects.sh**](scripts/pick_objects.sh): Starts the Gazebo simulation environment, brings up the `rtabmap` node in *localization* mode along with the `move_base` node, starts a configured `rviz` window, waits for the database map to load and the robot to be localized, brings up the `pick_objects` node, and moves the robot to the pickup and dropoff locations.
 * [**scripts/add_markers.sh**](scripts/add_markers.sh): Starts the Gazebo simulation environment, brings up the `rtabmap` node in *localization* mode along with the `move_base` node, starts a configured `rviz` window, waits for the database map to load and the robot to be localized, brings up the `add_markers` node, and shows and hides a marker at the pickup and dropoff locations in 5 second intervals.
-* [**scripts/home_service.sh**](scripts/home_service.sh): Starts the Gazebo simulation environment, brings up the `rtabmap` node in *localization* mode along with the `move_base` node, starts a configured `rviz` window, waits for the database map to load and the robot to be localized, brings up the `pick_objects` and `add_markers` nodes, and performs a pickup and dropoff.
+* [**scripts/home_service.sh**](scripts/home_service.sh): Starts the Gazebo simulation environment, brings up the `rtabmap` node in *localization* mode along with the `move_base` node, starts a configured `rviz` window, waits for the database map to load and the robot to be localized, brings up the `pick_objects` and `add_markers` nodes, and performs a pickup and dropoff: a pickup marker is shown, the robot moves to it, waits 5 sec, and then moves to another location where it places the marker.
 
 ### Using launch files
 
