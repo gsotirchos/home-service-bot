@@ -9,7 +9,7 @@
   <author email="gsotirch@gmail.com">George Sotirchos</author>
   <maintainer email="gsotirch@gmail.com">George Sotirchos</maintainer>
   <license>MIT</license>
-  <url type="website">https://github.com/7555G/home-service-bot</url>
+  <url type="website">https://github.com/gsotirchos/home-service-bot</url>
 
   <buildtool_depend>catkin</buildtool_depend>
 

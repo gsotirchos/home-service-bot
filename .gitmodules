@@ -1,6 +1,6 @@
 [submodule "mapping-bot"]
 	path = mapping-bot
-	url = https://github.com/7555G/mapping-bot
+	url = https://github.com/gsotirchos/mapping-bot
 [submodule "turtlebot_packages/slam_gmapping"]
 	path = turtlebot_packages/slam_gmapping
 	url = https://github.com/ros-perception/slam_gmapping

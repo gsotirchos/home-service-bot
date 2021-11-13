@@ -2,13 +2,13 @@
 
 ## Overview
 
-This is a meta-package containing the packages for performing an object pickup and dropoff "home service" via the `add_markers` and `pick_objects` packages' nodes. [mapping_bot](https://github.com/7555G/mapping-bot)'s `rtabmap` (along with `teleop_twist_keyboard` and `move_base`) can be used for mapping the environment and then localizing the robot using the generated graph during the "home service".
+This is a meta-package containing the packages for performing an object pickup and dropoff "home service" via the `add_markers` and `pick_objects` packages' nodes. [mapping_bot](https://github.com/gsotirchos/mapping-bot)'s `rtabmap` (along with `teleop_twist_keyboard` and `move_base`) can be used for mapping the environment and then localizing the robot using the generated graph during the "home service".
 
 * **add_markers**: Contains the `add_markers` node providing the services for manually showing and hiding a marker in RViz. It is also capable of notifying the `pick_objects` node to move the robot for pickup after a node is shown, and of hiding and re-showing the marker after successful pickup and dropoff.
 
 * **pick_objects**: Contains the `pick_objects` node providing a service for conveniently sending navigation goals to `move_base`. It is also capable of notifying the `add_markers` node of the transferring and successful pickup and dropoff of the marker.
 
-* [**mapping_bot**](https://github.com/7555G/mapping-bot): Contains the Gazebo environment and robot model along with the required configuration and launch files for bringing up the `rtabmap`, `rtabmapviz`, `move_base`, and `teleop_twist_keyboard` nodes.
+* [**mapping_bot**](https://github.com/gsotirchos/mapping-bot): Contains the Gazebo environment and robot model along with the required configuration and launch files for bringing up the `rtabmap`, `rtabmapviz`, `move_base`, and `teleop_twist_keyboard` nodes.
 
 ### License
 
@@ -41,7 +41,7 @@ To build from source, with ROS Kinetic on Ubuntu 16.04, clone the latest version
 ``` bash
 mkdir -p /catkin_ws/src
 cd catkin_ws/src
-git clone --recurse-submodules https://github.com/7555G/home-service-bot
+git clone --recurse-submodules https://github.com/gsotirchos/home-service-bot
 cd ../
 rosdep install --from-paths . --ignore-src
 catkin_make
@@ -124,7 +124,7 @@ If you prefer to manually launch each launch file rather than use the shell scri
 
 ## Launch files
 
-All the launch files used can be found in the [mapping_bot/launch](https://github.com/7555G/mapping-bot/tree/main/mapping_bot/launch) folder of the [mapping-bot](https://github.com/7555G/mapping-bot) package.
+All the launch files used can be found in the [mapping_bot/launch](https://github.com/gsotirchos/mapping-bot/tree/main/mapping_bot/launch) folder of the [mapping-bot](https://github.com/gsotirchos/mapping-bot) package.
 
 ## Nodes
 
@@ -224,7 +224,7 @@ A [SimpleActionClient](https://docs.ros.org/en/diamondback/api/actionlib/html/cl
 
 ### rtabmap
 
-The aspects of the `rtabmap` node used in this project are the same as [those used in the maping-bot project](https://github.com/7555G/mapping-bot#rtabmap).
+The aspects of the `rtabmap` node used in this project are the same as [those used in the maping-bot project](https://github.com/gsotirchos/mapping-bot#rtabmap).
 
 ### move_base
 
@@ -244,7 +244,7 @@ The [SimpleActionServer](https://docs.ros.org/en/api/actionlib/html/classactionl
 
 ## Bugs & Feature Requests
 
-Please report bugs and request features using the [Issue Tracker](https://github.com/7555G/home-service-bot/issues).
+Please report bugs and request features using the [Issue Tracker](https://github.com/gsotirchos/home-service-bot/issues).
 
 ROS: http://www.ros.org<br/>
 RTAB-Map's ROS package: https://github.com/introlab/rtabmap_ros<br/>
