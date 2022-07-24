@@ -45,7 +45,7 @@ git clone --recurse-submodules https://github.com/gsotirchos/home-service-bot
 cd ../
 rosdep install --from-paths . --ignore-src
 catkin_make
-# please place the downloaded database file at ./src/home-service-bot/mapping_bot/databases/rtabmap.db
+# please place the downloaded database file at ./src/home-service-bot/mapping-bot/mapping_bot/databases/rtabmap.db
 ```
 
 The `rtabmap.db` database file (~500MB) containing a graph for localization can be downloaded from the following link:<br/>
